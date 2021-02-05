@@ -1,6 +1,8 @@
 ## Alphaversion!!
 
-## backend client for banking api (Deutsche Bank)
+## pybank [![](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+
+### backend client for banking api (Deutsche Bank)
 
 create config file 'db_api.ini' with this content:
 
