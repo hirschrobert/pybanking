@@ -1,6 +1,6 @@
-##Alphaversion!!
+## Alphaversion!!
 
-##backend client for banking api (Deutsche Bank)
+## backend client for banking api (Deutsche Bank)
 
 create config file 'db_api.ini' with this content:
 
