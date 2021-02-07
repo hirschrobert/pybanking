@@ -1,8 +1,30 @@
+#!/usr/bin/env python3
+# -*- Mode:Python; encoding:utf8 -*-
+#
+# pybanking - a banking backend client at your service
+# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
 import requests, json, base64, time, configparser
 from requests_oauthlib import OAuth2Session
+import db
 
 config = configparser.ConfigParser()
-config.read('db_api.ini') # change if necessary
+config.read('./.config/db_api.ini') # change if necessary
+tokenfile = './.config/access_token.json'
 
 client_id = config['db_api']['client_id']
 client_secret = config['db_api']['client_secret']
@@ -16,7 +38,6 @@ scope = {
     'transaction_notifications'
 }
 tokenurl = 'https://simulator-api.db.com/gw/oidc/token'
-tokenfile = 'datadb.json'
 api = 'https://simulator-api.db.com/gw/dbapi/banking'
 
 def init():
@@ -101,20 +122,31 @@ def makeRequest(payload,endpoint):
         'Content-Type': "application/json; charset=utf-8"
     }
     r = requests.get(apirequest, headers=headers, params=payload)
-    #print(r.text)
-    jsonresult = json.loads(r.text)
-    return json.dumps(jsonresult,indent=2)
-    #with open(iban + '_transactions.json', 'w') as outfile:
+    return json.loads(r.text)
+    #jsonresult = json.loads(r.text)
+    #return json.dumps(jsonresult,indent=2)
+    #with open('./database/' + iban + '_transactions.json', 'w') as outfile:
     #    json.dump(jsonresult, outfile,indent=2)
+
+print("pybanking  Copyright (C) 2021  Robert Hirsch\n
+This program comes with ABSOLUTELY NO WARRANTY; for details type \'show w\'.\n
+This is free software, and you are welcome to redistribute it
+under certain conditions; type \'show c\' for details.")
 
 getAccessToken()
 
 ### only testdata
 payload = {
     'iban': "DE10010000000000007549",
+    'limit': 200
 }
 endpoint = '/transactions/v2'
-print(makeRequest(payload,endpoint))
+res = makeRequest(payload,endpoint)
+
+db.insertTransactions(res)
+# print("inserted")
+
+"""
 payload = {
     'iban': "DE10010000000000007549",
 }
@@ -124,3 +156,4 @@ print(makeRequest(payload,endpoint))
 payload = {}
 endpoint = '/cashAccounts/v2'
 print(makeRequest(payload,endpoint))
+"""

@@ -1,7 +1,7 @@
 [![](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 ## Alphaversion!!
 
-## pybank
+## pybanking - a banking backend client at your service
 
 ### backend client for banking api (Deutsche Bank)
 
@@ -18,6 +18,7 @@ client_secret = put_your_client_secret_here
 python dependencies:
 - base64
 - configparser
+- dataset
 - json
 - requests
 - requests_oauthlib (OAuth2Session)

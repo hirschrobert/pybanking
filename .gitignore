@@ -1,4 +1,4 @@
-*
+.config/
+/database
+__pycache__/
 !.gitignore
-!pybank.py
-!Readme.md
