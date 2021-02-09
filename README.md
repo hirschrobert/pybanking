@@ -3,8 +3,6 @@
 
 ## pybanking - a backend banking client at your service
 
-### backend client for banking api (Deutsche Bank)
-
 [Deutsche Bank Api reference](https://developer.db.com/)
 
 rename file 'db_api.ini.sample' in folder 'config' into 'db_api.ini' and replace values with your individual credentials:
