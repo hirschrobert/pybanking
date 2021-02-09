@@ -1,7 +1,7 @@
-[![](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/) ![CodeQL](https://github.com/hirschrobert/pybanking/workflows/CodeQL/badge.svg?branch=main)
 ## Alphaversion!!
 
-## pybanking - a banking backend client at your service
+## pybanking - a backend banking client at your service
 
 ### backend client for banking api (Deutsche Bank)
 

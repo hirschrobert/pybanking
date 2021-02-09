@@ -25,8 +25,7 @@ from src.controller.db import db
 from src.controller.authorize import Authorize
 
 config = configparser.ConfigParser()
-config.read('./.config/db_api.ini') # change if necessary
-tokenfile = './.config/access_token.json'
+config.read('./config/db_api.ini') # change if necessary
 
 client_id = config['db_api']['client_id']
 client_secret = config['db_api']['client_secret']
@@ -41,44 +40,6 @@ scope = {
 }
 tokenurl = 'https://simulator-api.db.com/gw/oidc/token'
 api = 'https://simulator-api.db.com/gw/dbapi/banking'
-
-def init():
-    oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
-    authorization_url, state = oauth.authorization_url(authorize_endpoint)
-
-    print('Bitte diese Seite im Browser öffnen und den sechstelligen Wert von \"code\" aus der Adresszeile kopieren und hier einfügen:\n', authorization_url)
-
-    #authorization_response = input('Bitte code eingeben: ')
-
-    try:
-        authorization_response = initAuto(config)
-    except ValueError as err:
-        print(err)
-        return -1
-
-
-    payload = {
-        'grant_type': 'authorization_code',
-        'code': authorization_response,
-        'redirect_uri': redirect_uri
-    }
-    data_string = client_id + ":" + client_secret
-    data_bytes = data_string.encode("utf-8")
-    headers = {
-        'Authorization': "Basic " + base64.b64encode(data_bytes).decode("utf-8"),
-        'Content-Type': "application/x-www-form-urlencoded",
-        'cache-control': "no-cache"
-    }
-    now = int(time.time())
-    response = requests.post(tokenurl, data=payload, headers=headers)
-    print(response.text)
-
-    timeadd = { 'creation_time': now}
-    jsonresult = json.loads(response.text)
-    jsonresult.update(timeadd)
-    with open(tokenfile, 'w') as outfile:
-        json.dump(jsonresult, outfile,indent=2)
-    return jsonresult['access_token']
 
 def tokenIsOutdated(creation_time,expires_in):
     if ((creation_time + expires_in) < int(time.time())):
