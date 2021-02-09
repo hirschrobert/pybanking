@@ -17,9 +17,11 @@ client_secret = put_your_client_secret_here
 
 python dependencies:
 - base64
+- BeautifulSoup
 - configparser
 - dataset
 - json
 - requests
 - requests_oauthlib (OAuth2Session)
+- sqlalchemy
 - time

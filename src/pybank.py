@@ -20,7 +20,9 @@
 
 import requests, json, base64, time, configparser
 from requests_oauthlib import OAuth2Session
-import db
+from src.controller.db import db
+
+from src.controller.authorize import Authorize
 
 config = configparser.ConfigParser()
 config.read('./.config/db_api.ini') # change if necessary
@@ -46,7 +48,14 @@ def init():
 
     print('Bitte diese Seite im Browser öffnen und den sechstelligen Wert von \"code\" aus der Adresszeile kopieren und hier einfügen:\n', authorization_url)
 
-    authorization_response = input('Bitte code eingeben: ')
+    #authorization_response = input('Bitte code eingeben: ')
+
+    try:
+        authorization_response = initAuto(config)
+    except ValueError as err:
+        print(err)
+        return -1
+
 
     payload = {
         'grant_type': 'authorization_code',
@@ -71,68 +80,59 @@ def init():
         json.dump(jsonresult, outfile,indent=2)
     return jsonresult['access_token']
 
-def refreshToken(access_token_file):
-    data_string = client_id + ":" + client_secret
-    data_bytes = data_string.encode("utf-8")
-    headers = {
-        'Authorization': "Basic " + base64.b64encode(data_bytes).decode("utf-8"),
-        'Content-Type': "application/x-www-form-urlencoded"
-    }
-    payload = {
-        'grant_type': 'refresh_token',
-        'refresh_token': access_token_file['refresh_token'],
-        'scope': " ".join(scope)
-    }
-    now = int(time.time())
-    response = requests.post(tokenurl, data=payload, headers=headers)
-    print(response.text)
-
-    timeadd = { 'creation_time': now}
-    jsonresult = json.loads(response.text)
-    jsonresult.update(timeadd)
-    with open(tokenfile, 'w') as outfile:
-        json.dump(jsonresult, outfile,indent=2)
-    return jsonresult['access_token']
-
 def tokenIsOutdated(creation_time,expires_in):
     if ((creation_time + expires_in) < int(time.time())):
         return True
     else:
         return False
 
-def getAccessToken():
-    with open(tokenfile, 'r') as outfile:
-        access_token_file = json.load(outfile)
+def getAccessTokenByIban(iban):
+    account = db().getAccountByIban(iban)
+    access_token = account.getAccessToken()
     #TODO: also new token when scope changed
-    if (access_token_file.get('expires_in') == None):
+    if not hasattr(access_token , 'expires_in'):
         print("getting new token")
-        access_token = init()
-    elif (tokenIsOutdated(access_token_file['creation_time'],access_token_file['expires_in'])):
+        access_token = Authorize(config).getNewAccessToken(account)
+        db().setAccessTokenforAccount(account.getUsername(),access_token)
+    elif (tokenIsOutdated(access_token['creation_time'],access_token['expires_in'])):
         print("refreshing token")
-        access_token = refreshToken(access_token_file)
+        access_token = Authorize(config).refreshToken(account)
+        db().setAccessTokenforAccount(account.getUsername(),access_token)
     else:
-        access_token = access_token_file['access_token']
+        access_token = access_token
     return access_token
 
 def makeRequest(payload,endpoint):
     apirequest = api + endpoint
-    access_token = getAccessToken()
+    access_token = getAccessTokenByIban(payload['iban'])
     headers = {
-        'Authorization': "Bearer " + access_token,
+        'Authorization': "Bearer " + access_token['access_token'],
         'Content-Type': "application/json; charset=utf-8"
     }
     r = requests.get(apirequest, headers=headers, params=payload)
     return json.loads(r.text)
-    #jsonresult = json.loads(r.text)
-    #return json.dumps(jsonresult,indent=2)
-    #with open('./database/' + iban + '_transactions.json', 'w') as outfile:
-    #    json.dump(jsonresult, outfile,indent=2)
 
-print("pybanking  Copyright (C) 2021  Robert Hirsch\n
-This program comes with ABSOLUTELY NO WARRANTY; for details type \'show w\'.\n
-This is free software, and you are welcome to redistribute it
-under certain conditions; type \'show c\' for details.")
+def getTransactionsbyIban(iban):
+    payload = {
+        'iban': iban,
+        'limit': 200
+    }
+    endpoint = '/transactions/v2'
+    res = makeRequest(payload,endpoint)
+    return res
 
+print('''
+pybanking Copyright (C) 2021 Robert Hirsch
+This program comes with ABSOLUTELY NO WARRANTY; for details type \'show w\'.
+This is free software, and you are welcome to redistribute it under certain conditions; type \'show c\' for details.
+''')
+
+iban = "DE10010000000000007549"
+res = getTransactionsbyIban(iban)
+db().insertTransactions(res)
+
+
+"""
 getAccessToken()
 
 ### only testdata
@@ -143,10 +143,8 @@ payload = {
 endpoint = '/transactions/v2'
 res = makeRequest(payload,endpoint)
 
-db.insertTransactions(res)
-# print("inserted")
+db().insertTransactions(res)
 
-"""
 payload = {
     'iban': "DE10010000000000007549",
 }

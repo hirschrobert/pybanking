@@ -18,15 +18,19 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import dataset
-# connecting to a SQLite database
-db = dataset.connect('sqlite:///./database/pybanking.db')
+from sqlalchemy import Column, Integer, String, JSON
 
-def insertTransactions(transactions):
-    table = db['transactions']
-    try:
-        for t in transactions['transactions']:
-            table.insert_ignore(dict(tid=t['id'], transaction=t), ['tid'])
-    except:
-      raise Exception("Could not insert transaction")
-    return 0
+from src.controller.base import Base
+
+class Transaction(Base):
+    __tablename__ = 'transactions'
+
+    id = Column(Integer, primary_key=True)
+    tid = Column(String)
+    iban = Column(String)
+    transaction = Column(JSON)
+
+    def __init__(self, tid, iban, transaction):
+        self.tid = tid
+        self.iban = iban
+        self.transaction = transaction

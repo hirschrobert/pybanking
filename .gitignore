@@ -1,4 +1,5 @@
 .config/
 /database
+/test
 __pycache__/
 !.gitignore
