@@ -1,4 +1,5 @@
-.config/
+!config/db_api.ini.sample
+config/
 /database
 /test
 __pycache__/
