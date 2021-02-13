@@ -20,7 +20,7 @@
 
 from sqlalchemy import Column, Integer, String, JSON
 
-from src.controller.base import Base
+from controller.base import Base
 
 class Transaction(Base):
     __tablename__ = 'transactions'

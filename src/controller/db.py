@@ -20,11 +20,12 @@
 
 import dataset, json
 
-from src.controller.base import Session, engine, Base
+from controller.base import Session, engine, Base
 
-from src.model.transaction import Transaction
-from src.model.account import Account
-from src.model.iban import Iban
+from model.transaction import Transaction
+from model.account import Account
+from model.iban import Iban
+from model.bank import Bank
 
 class db:
     def __init__(self):
@@ -47,16 +48,39 @@ class db:
         #accountdata = json.loads(accountdata)
         usernameConcatenated = "/db" + accountdata['input_branch'] + accountdata['input_account'] + accountdata['input_subaccount']
         try:
-            newAccount = Account(username = usernameConcatenated, password = accountdata['password'], bank = accountdata['bank'], access_token = accountdata['access_token'])
+            newAccount = Account(username = usernameConcatenated, password = accountdata['password'], access_token = {"hello":"world"})
+            newAccount.bank = self.getBankByName(accountdata['bank'])
             newIbans = []
             for iban in accountdata['ibans']:
-                newIbans.append(Iban(iban=iban['iban']))
+                newIbans.append(Iban(iban=iban))
             newAccount.ibans = newIbans
             self.session.add(newAccount)
             self.session.commit()
         except:
           raise Exception("Could not insert account")
         return 0
+
+    def insertBank(self,bankdata):
+        try:
+            newBank = Bank(
+                name = bankdata['name'],
+                authorize_endpoint = bankdata['authorize_endpoint'],
+                tokenurl = bankdata['tokenurl'],
+                apiurl =  bankdata['apiurl'],
+                requests = bankdata['requests']
+            )
+            self.session.add(newBank)
+            self.session.commit()
+        except:
+          raise Exception("Could not insert bank")
+        return 0
+
+    def getBankByName(self, name):
+        bank = self.session.query(Bank) \
+        .filter(Bank.name == name) \
+        .first()
+
+        return bank
 
     def getAccountByIban(self, iban):
         account = self.session.query(Account) \

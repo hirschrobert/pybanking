@@ -21,29 +21,26 @@
 from sqlalchemy import Table, Column, Integer, String, JSON, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 
-from src.controller.base import Base
-
-accounts_ibans_association = Table(
-    'accounts_ibans', Base.metadata,
-    Column('account_id', Integer, ForeignKey('accounts.id')),
-    Column('ibans_id', Integer, ForeignKey('ibans.id'))
-)
+from controller.base import Base
+from model.bank import Bank
 
 class Account(Base):
     __tablename__ = 'accounts'
-    __table_args__ = (UniqueConstraint('username', 'bank'),)
+    #__table_args__ = (UniqueConstraint('username', 'bank'),)
+    __table_args__ = (UniqueConstraint('username', 'bank_id', name='account_uc'),)
 
     id = Column(Integer, primary_key=True)
     username = Column(String)
     password = Column(String)
-    bank = Column(String)
     access_token = Column(JSON)
-    ibans = relationship("Iban", secondary=accounts_ibans_association)
+    scope = Column(JSON)
+    ibans = relationship("Iban", back_populates="account")
+    bank_id = Column(Integer, ForeignKey('banks.id'))
+    bank = relationship("Bank", back_populates="accounts")
 
-    def __init__(self, username, password, bank, access_token):
+    def __init__(self, username, password, access_token):
         self.username = username
         self.password = password
-        self.bank = bank
         self.access_token = access_token
 
     def getAccessToken(self):

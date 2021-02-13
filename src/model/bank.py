@@ -18,21 +18,27 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from sqlalchemy import Column, Integer, String, JSON, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, JSON, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 
 from controller.base import Base
-from model.bank import Bank
-from model.account import Account
 
-class Iban(Base):
-    __tablename__ = 'ibans'
-
+class Bank(Base):
+    __tablename__ = 'banks'
+    __table_args__ = (UniqueConstraint('name', 'authorize_endpoint', 'tokenurl', 'apiurl',  name='bank_uc'),)
     id = Column(Integer, primary_key=True)
-    iban = Column(String, unique=True)
-    bank = relationship("Bank", back_populates="ibans", uselist=False)
-    account_id = Column(Integer, ForeignKey('accounts.id'))
-    account = relationship("Account", back_populates="ibans")
+    name = Column(String)
+    authorize_endpoint = Column(String)
+    tokenurl = Column(String)
+    apiurl =  Column(String)
+    requests = Column(JSON)
+    ibans = relationship("Iban", back_populates="bank")
+    ibans_id = Column(Integer, ForeignKey('ibans.id'))
+    accounts = relationship("Account", back_populates="bank")
 
-    def __init__(self, iban):
-        self.iban = iban
+    def __init__(self, name, authorize_endpoint, tokenurl, apiurl, requests):
+        self.name = name
+        self.authorize_endpoint = authorize_endpoint
+        self.tokenurl = tokenurl
+        self.apiurl = apiurl
+        self.requests = requests

@@ -18,7 +18,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import requests, base64, time, json
+import requests, base64, time, json, configparser
 from urllib import parse
 from bs4 import BeautifulSoup
 from requests_oauthlib import OAuth2Session
@@ -26,7 +26,10 @@ from requests_oauthlib import OAuth2Session
 class Authorize:
 
     # Code
-    def __init__(self,config):
+    def __init__(self):
+
+        config = configparser.ConfigParser()
+        config.read('../config/db_api.ini') # change if necessary
 
         self.client_id = config['db_api']['client_id']
         self.client_secret = config['db_api']['client_secret']
