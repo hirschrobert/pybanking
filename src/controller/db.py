@@ -47,14 +47,15 @@ class db:
 
     def insertAccount(self, accountdata):
         # only deutsche bank
-        # accountdata = json.loads(accountdata)
-        usernameConcatenated = "/db" + accountdata['input_branch'] + accountdata['input_account'] + accountdata['input_subaccount']
         try:
-            newAccount = Account(username=usernameConcatenated, password=accountdata['password'], access_token={"hello":"world"})
-            newAccount.bank = self.getBankByName(accountdata['bank'])
+            newAccount = Account(username=accountdata['username'], password=accountdata['password'], access_token={"hello":"world"})
+            bankofaccount = self.getBankByBic(accountdata['bic'])
+            newAccount.setBank(bankofaccount)
             newIbans = []
             for iban in accountdata['ibans']:
-                newIbans.append(Iban(iban=iban))
+                ibanofaccount = Iban(iban=iban)
+                ibanofaccount.setBank(bankofaccount)
+                newIbans.append(ibanofaccount)
             newAccount.ibans = newIbans
             self.session.add(newAccount)
             self.session.commit()
@@ -71,6 +72,7 @@ class db:
                 authorize_endpoint=bankdata['authorize_endpoint'],
                 tokenurl=bankdata['tokenurl'],
                 apiurl=bankdata['apiurl'],
+                accountInput=bankdata['accountInput'],
                 requests=bankdata['requests']
             )
             self.session.add(newBank)
@@ -79,12 +81,26 @@ class db:
             self.session.rollback()
             raise Exception("Could not insert bank")
 
-    def getBankByName(self, name):
-        bank = self.session.query(Bank) \
-        .filter(Bank.name == name) \
-        .first()
-
-        return bank
+    def getBankByIban(self, iban):
+        try:
+            bank = self.session.query(Bank) \
+            .join(Iban, Bank.ibans) \
+            .filter(Iban.iban == iban) \
+            .one_or_none()
+            print(bank)
+            return bank
+        except:
+            raise Exception("Could not find bank by iban")
+    
+    def getBankByBic(self, bic):
+        try:
+            # bic[:6] = only use four letter bank id and two letter country id
+            bank = self.session.query(Bank) \
+            .filter(Bank.bic.like(bic[:6] + '%'))\
+            .one_or_none()
+            return bank
+        except:
+            raise Exception("Could not find bank by bic")
 
     def getAccountByIban(self, iban):
         account = self.session.query(Account) \

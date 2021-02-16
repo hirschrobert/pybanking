@@ -31,9 +31,13 @@ class Iban(Base):
 
     id = Column(Integer, primary_key=True)
     iban = Column(String, unique=True)
-    bank = relationship("Bank", back_populates="ibans", uselist=False)
+    bank_id = Column(Integer, ForeignKey('banks.id'))
+    bank = relationship("Bank", back_populates="ibans")
     account_id = Column(Integer, ForeignKey('accounts.id'))
     account = relationship("Account", back_populates="ibans")
 
     def __init__(self, iban):
         self.iban = iban
+    
+    def setBank(self, bank):
+        self.bank = bank

@@ -33,16 +33,19 @@ class Bank(Base):
     authorize_endpoint = Column(String)
     tokenurl = Column(String)
     apiurl = Column(String)
+    accountInput = Column(JSON)
     requests = Column(JSON)
     ibans = relationship("Iban", back_populates="bank")
-    #ibans = relationship("Iban")
-    ibans_id = Column(Integer, ForeignKey('ibans.id'))
     accounts = relationship("Account", back_populates="bank")
 
-    def __init__(self, bic, name, authorize_endpoint, tokenurl, apiurl, requests):
+    def __init__(self, bic, name, authorize_endpoint, tokenurl, apiurl, accountInput, requests):
         self.bic = bic
         self.name = name
         self.authorize_endpoint = authorize_endpoint
         self.tokenurl = tokenurl
         self.apiurl = apiurl
+        self.accountInput = accountInput
         self.requests = requests
+    
+    def getAccountInput(self):
+        return self.accountInput

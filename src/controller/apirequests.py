@@ -38,7 +38,6 @@ class apiRequest:
         account = db().getAccountByIban(iban)
         access_token = account.getAccessToken()
         # TODO: also new token when scope changed
-        #if not hasattr(access_token , 'expires_in'):
         if not 'expires_in' in access_token:
             print("getting new token")
             access_token = Authorize().getNewAccessToken(account)
@@ -52,6 +51,7 @@ class apiRequest:
         return access_token
 
     def makeRequest(self, payload, endpoint):
+        #get api model of bank_name
         apirequest = self.api + endpoint
         access_token = self.getAccessTokenByIban(payload['iban'])
         headers = {

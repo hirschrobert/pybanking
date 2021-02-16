@@ -27,7 +27,6 @@ from model.bank import Bank
 
 class Account(Base):
     __tablename__ = 'accounts'
-    # __table_args__ = (UniqueConstraint('username', 'bank'),)
     __table_args__ = (UniqueConstraint('username', 'bank_id', name='account_uc'),)
 
     id = Column(Integer, primary_key=True)
@@ -38,13 +37,15 @@ class Account(Base):
     ibans = relationship("Iban", back_populates="account")
     bank_id = Column(Integer, ForeignKey('banks.id'))
     bank = relationship("Bank", back_populates="accounts")
-    #bank = relationship("Bank")
 
     def __init__(self, username, password, access_token):
         self.username = username
         self.password = password
         self.access_token = access_token
 
+    def setBank(self, bank):
+        self.bank = bank
+        
     def getAccessToken(self):
         return self.access_token
 
