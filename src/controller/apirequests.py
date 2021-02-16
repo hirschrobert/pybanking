@@ -2,7 +2,7 @@
 # -*- Mode:Python; encoding:utf8 -*-
 #
 # pybanking - a banking backend client at your service
-# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+# Copyright (C) 2021  Robert Hirsch <dev@robert-hirsch.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,38 +18,40 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import requests, json
+import requests, json, time
 from controller.db import db
 from controller.authorize import Authorize
+
 
 class apiRequest:
 
     def __init__(self):
         self.api = 'https://simulator-api.db.com/gw/dbapi/banking'
 
-    def tokenIsOutdated(self,creation_time,expires_in):
+    def tokenIsOutdated(self, creation_time, expires_in):
         if ((creation_time + expires_in) < int(time.time())):
             return True
         else:
             return False
 
-    def getAccessTokenByIban(self,iban):
+    def getAccessTokenByIban(self, iban):
         account = db().getAccountByIban(iban)
         access_token = account.getAccessToken()
-        #TODO: also new token when scope changed
-        if not hasattr(access_token , 'expires_in'):
+        # TODO: also new token when scope changed
+        #if not hasattr(access_token , 'expires_in'):
+        if not 'expires_in' in access_token:
             print("getting new token")
             access_token = Authorize().getNewAccessToken(account)
-            db().setAccessTokenforAccount(account.getUsername(),access_token)
-        elif (tokenIsOutdated(access_token['creation_time'],access_token['expires_in'])):
+            db().setAccessTokenforAccount(account.getUsername(), access_token)
+        elif (self.tokenIsOutdated(access_token['creation_time'], access_token['expires_in'])):
             print("refreshing token")
             access_token = Authorize().refreshToken(account)
-            db().setAccessTokenforAccount(account.getUsername(),access_token)
+            db().setAccessTokenforAccount(account.getUsername(), access_token)
         else:
             access_token = access_token
         return access_token
 
-    def makeRequest(self,payload,endpoint):
+    def makeRequest(self, payload, endpoint):
         apirequest = self.api + endpoint
         access_token = self.getAccessTokenByIban(payload['iban'])
         headers = {

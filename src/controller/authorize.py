@@ -2,7 +2,7 @@
 # -*- Mode:Python; encoding:utf8 -*-
 #
 # pybanking - a banking backend client at your service
-# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+# Copyright (C) 2021  Robert Hirsch <dev@robert-hirsch.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,13 +23,14 @@ from urllib import parse
 from bs4 import BeautifulSoup
 from requests_oauthlib import OAuth2Session
 
+
 class Authorize:
 
     # Code
     def __init__(self):
 
         config = configparser.ConfigParser()
-        config.read('../config/db_api.ini') # change if necessary
+        config.read('../config/db_api.ini')  # change if necessary
 
         self.client_id = config['db_api']['client_id']
         self.client_secret = config['db_api']['client_secret']
@@ -44,7 +45,7 @@ class Authorize:
         }
         self.tokenurl = 'https://simulator-api.db.com/gw/oidc/token'
 
-    def getAuthorizationCode(self,account):
+    def getAuthorizationCode(self, account):
 
         str = account.getUsername()
         print(str)
@@ -65,7 +66,7 @@ class Authorize:
 
         r = oauth.get(authorization_url)
 
-        soup = BeautifulSoup(r.text,"lxml")
+        soup = BeautifulSoup(r.text, "lxml")
         try:
             csrf = soup.find('input', {'name': '_csrf'}).get('value')
         except:
@@ -84,8 +85,8 @@ class Authorize:
                      "_csrf": csrf,
                      "submitButton": ""
         }
-        r = oauth.post('https://simulator-api.db.com/gw/oidc/login', data=form_data, headers=headers,cookies=oauth.cookies,allow_redirects=False) # Login.
-        r = oauth.get(r.headers['Location'],allow_redirects=False)
+        r = oauth.post('https://simulator-api.db.com/gw/oidc/login', data=form_data, headers=headers, cookies=oauth.cookies, allow_redirects=False)  # Login.
+        r = oauth.get(r.headers['Location'], allow_redirects=False)
         params = dict(parse.parse_qsl(parse.urlsplit(r.headers['Location']).query))
         print(params)
         if (state == params['state']):

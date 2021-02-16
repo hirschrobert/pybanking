@@ -2,7 +2,7 @@
 # -*- Mode:Python; encoding:utf8 -*-
 #
 # pybanking - a banking backend client at your service
-# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+# Copyright (C) 2021  Robert Hirsch <dev@robert-hirsch.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,12 +21,13 @@
 from sqlalchemy import Table, Column, Integer, String, JSON, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 
-from controller.base import Base
+from controller.base import Base  # @UnresolvedImport
 from model.bank import Bank
+
 
 class Account(Base):
     __tablename__ = 'accounts'
-    #__table_args__ = (UniqueConstraint('username', 'bank'),)
+    # __table_args__ = (UniqueConstraint('username', 'bank'),)
     __table_args__ = (UniqueConstraint('username', 'bank_id', name='account_uc'),)
 
     id = Column(Integer, primary_key=True)
@@ -37,6 +38,7 @@ class Account(Base):
     ibans = relationship("Iban", back_populates="account")
     bank_id = Column(Integer, ForeignKey('banks.id'))
     bank = relationship("Bank", back_populates="accounts")
+    #bank = relationship("Bank")
 
     def __init__(self, username, password, access_token):
         self.username = username

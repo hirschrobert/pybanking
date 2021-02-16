@@ -2,7 +2,7 @@
 # -*- Mode:Python; encoding:utf8 -*-
 #
 # pybanking - a banking backend client at your service
-# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+# Copyright (C) 2021  Robert Hirsch <dev@robert-hirsch.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,12 +18,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON, UniqueConstraint
 
-from controller.base import Base
+from controller.base import Base  # @UnresolvedImport
+
 
 class Transaction(Base):
     __tablename__ = 'transactions'
+    __table_args__ = (UniqueConstraint('tid', 'iban', name='tid_iban_uc'),)
 
     id = Column(Integer, primary_key=True)
     tid = Column(String)

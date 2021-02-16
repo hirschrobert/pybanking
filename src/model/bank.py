@@ -2,7 +2,7 @@
 # -*- Mode:Python; encoding:utf8 -*-
 #
 # pybanking - a banking backend client at your service
-# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+# Copyright (C) 2021  Robert Hirsch <dev@robert-hirsch.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,22 +21,26 @@
 from sqlalchemy import Table, Column, Integer, String, JSON, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 
-from controller.base import Base
+from controller.base import Base  # @UnresolvedImport
+
 
 class Bank(Base):
     __tablename__ = 'banks'
-    __table_args__ = (UniqueConstraint('name', 'authorize_endpoint', 'tokenurl', 'apiurl',  name='bank_uc'),)
+    __table_args__ = (UniqueConstraint('name', 'authorize_endpoint', 'tokenurl', 'apiurl', name='bank_uc'),)
     id = Column(Integer, primary_key=True)
+    bic = Column(String, unique=True)
     name = Column(String)
     authorize_endpoint = Column(String)
     tokenurl = Column(String)
-    apiurl =  Column(String)
+    apiurl = Column(String)
     requests = Column(JSON)
     ibans = relationship("Iban", back_populates="bank")
+    #ibans = relationship("Iban")
     ibans_id = Column(Integer, ForeignKey('ibans.id'))
     accounts = relationship("Account", back_populates="bank")
 
-    def __init__(self, name, authorize_endpoint, tokenurl, apiurl, requests):
+    def __init__(self, bic, name, authorize_endpoint, tokenurl, apiurl, requests):
+        self.bic = bic
         self.name = name
         self.authorize_endpoint = authorize_endpoint
         self.tokenurl = tokenurl

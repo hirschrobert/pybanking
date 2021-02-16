@@ -2,7 +2,7 @@
 # -*- Mode:Python; encoding:utf8 -*-
 #
 # pybanking - a banking backend client at your service
-# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+# Copyright (C) 2021  Robert Hirsch <dev@robert-hirsch.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,30 +18,44 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import requests, json, base64, time, configparser
-from requests_oauthlib import OAuth2Session
+import json
+from controller.apirequests import apiRequest  # @UnresolvedImport
+from controller.db import db  # @UnresolvedImport
 
-from controller.authorize import Authorize
-from controller.apirequests import apiRequest
-from controller.db import db
 
 class Pb:
+    
+    def __init__(self):
+        self.db = db()
+        with open('../config/bankdata.json', 'r') as f:
+            data = json.load(f)
+            for bankdata in data:
+                try:
+                    self.setBank(bankdata)
+                except:
+                    print("not inserting bank, already exist")
+                    pass
 
-    def setTransactionsbyIban(self,iban):
+
+    def setTransactionsbyIban(self, iban):
         try:
-            #db().ibanExists(iban)
+            # db().ibanExists(iban)
             payload = {
                 'iban': iban,
                 'limit': 200
             }
             endpoint = '/transactions/v2'
-            res = apiRequest().makeRequest(payload,endpoint)
-            db().insertTransactions(res)
+            res = apiRequest().makeRequest(payload, endpoint)
+            self.db.insertTransactions(res)
         except:
-            raise Exception("Could not find iban. Please provice iban and its credentials.")
+            raise Exception("Could not find iban. Please provide iban and its credentials.")
 
-    def setBank(self,bankdata):
-        db().insertBank(bankdata)
+    def setBank(self, bankdata):
+        self.db.insertBank(bankdata)
 
-    def setAccount(self,accountdata):
-        db().insertAccount(accountdata)
+    def setAccount(self, accountdata):
+        try:
+            self.db.insertAccount(accountdata)
+        except:
+            print("not inserting account, already exist")
+            pass

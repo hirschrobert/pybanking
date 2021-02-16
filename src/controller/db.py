@@ -2,7 +2,7 @@
 # -*- Mode:Python; encoding:utf8 -*-
 #
 # pybanking - a banking backend client at your service
-# Copyright (C) 2021  Robert Hirsch <info@robert-hirsch.de>
+# Copyright (C) 2021  Robert Hirsch <dev@robert-hirsch.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,37 +18,39 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import dataset, json
 
-from controller.base import Session, engine, Base
+from controller.base import engine, Session, Base
 
 from model.transaction import Transaction
 from model.account import Account
 from model.iban import Iban
 from model.bank import Bank
 
+
 class db:
+
     def __init__(self):
 
-        Base.metadata.create_all(engine)
+        Base.metadata.create_all(engine)  # @UndefinedVariable
         self.session = Session()
 
-    def insertTransactions(self,transactions):
-        try:
-            for t in transactions['transactions']:
-                newTransaction = Transaction(tid = t['id'], iban = t['originIban'], transaction = t)
-                self.session.add(newTransaction)
-            self.session.commit()
-        except:
-          raise Exception("Could not insert transaction")
-        return 0
+    def insertTransactions(self, transactions):
+        for t in transactions['transactions']:
+            try:
+                newTransaction = Transaction(tid=t['id'], iban=t['originIban'], transaction=t)
+                self.session.merge(newTransaction)
+                self.session.commit()
+            except:
+                self.session.rollback()
+                print("transaction already exists")
+                pass
 
-    def insertAccount(self,accountdata):
+    def insertAccount(self, accountdata):
         # only deutsche bank
-        #accountdata = json.loads(accountdata)
+        # accountdata = json.loads(accountdata)
         usernameConcatenated = "/db" + accountdata['input_branch'] + accountdata['input_account'] + accountdata['input_subaccount']
         try:
-            newAccount = Account(username = usernameConcatenated, password = accountdata['password'], access_token = {"hello":"world"})
+            newAccount = Account(username=usernameConcatenated, password=accountdata['password'], access_token={"hello":"world"})
             newAccount.bank = self.getBankByName(accountdata['bank'])
             newIbans = []
             for iban in accountdata['ibans']:
@@ -57,23 +59,25 @@ class db:
             self.session.add(newAccount)
             self.session.commit()
         except:
-          raise Exception("Could not insert account")
-        return 0
+            self.session.rollback()
+            raise Exception("Could not insert account")
+            pass
 
-    def insertBank(self,bankdata):
+    def insertBank(self, bankdata):
         try:
             newBank = Bank(
-                name = bankdata['name'],
-                authorize_endpoint = bankdata['authorize_endpoint'],
-                tokenurl = bankdata['tokenurl'],
-                apiurl =  bankdata['apiurl'],
-                requests = bankdata['requests']
+                bic=bankdata['bic'],
+                name=bankdata['name'],
+                authorize_endpoint=bankdata['authorize_endpoint'],
+                tokenurl=bankdata['tokenurl'],
+                apiurl=bankdata['apiurl'],
+                requests=bankdata['requests']
             )
             self.session.add(newBank)
             self.session.commit()
         except:
-          raise Exception("Could not insert bank")
-        return 0
+            self.session.rollback()
+            raise Exception("Could not insert bank")
 
     def getBankByName(self, name):
         bank = self.session.query(Bank) \
@@ -90,8 +94,8 @@ class db:
 
         return account
 
-    def setAccessTokenforAccount(self,username,access_token):
-        res = self.session.query(Account).filter(Account.username == username).update({Account.access_token: access_token},synchronize_session='fetch')
+    def setAccessTokenforAccount(self, username, access_token):
+        res = self.session.query(Account).filter(Account.username == username).update({Account.access_token: access_token}, synchronize_session='fetch')
         # if res  == 1
         self.session.commit()
         return 0
